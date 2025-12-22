@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.domain.vo
 import com.koosco.common.core.exception.BadRequestException
 import com.koosco.orderservice.common.error.OrderErrorCode
 
-data class OrderItemSpec(val productId: Long, val quantity: Int, val unitPrice: Money) {
+data class OrderItemSpec(val skuId: String, val quantity: Int, val unitPrice: Money) {
 
     init {
         if (quantity <= 0) {

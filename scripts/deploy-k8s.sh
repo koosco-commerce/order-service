@@ -8,6 +8,34 @@
 
 set -e
 
+# Check if we need sudo for docker commands (Linux only)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Check if docker command needs sudo
+    if ! docker ps >/dev/null 2>&1; then
+        if sudo docker ps >/dev/null 2>&1; then
+            # Docker works with sudo, re-run script with sudo if not already running as sudo
+            if [ "$EUID" -ne 0 ]; then
+                echo "Docker requires sudo privileges. Re-running script with sudo..."
+                exec sudo -E bash "$0" "$@"
+            fi
+            # If already running with sudo, use sudo for docker commands
+            DOCKER_CMD="sudo docker"
+            DOCKER_COMPOSE_CMD="sudo docker-compose"
+        else
+            echo "Error: Cannot run docker commands even with sudo"
+            exit 1
+        fi
+    else
+        # Docker works without sudo
+        DOCKER_CMD="docker"
+        DOCKER_COMPOSE_CMD="docker-compose"
+    fi
+else
+    # macOS or other OS
+    DOCKER_CMD="docker"
+    DOCKER_COMPOSE_CMD="docker-compose"
+fi
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -77,16 +105,16 @@ case ${ENVIRONMENT} in
 
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        ${DOCKER_CMD} build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
         # Docker Compose로 실행
         echo "Starting services with Docker Compose..."
         if command -v docker-compose &> /dev/null; then
-            docker-compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+            ${DOCKER_COMPOSE_CMD} -f ${PROJECT_DIR}/docker-compose.yaml up -d
         else
-            docker compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
+            ${DOCKER_CMD} compose -f ${PROJECT_DIR}/docker-compose.yaml up -d
         fi
         echo -e "${GREEN}✓${NC} Services started"
         echo ""
@@ -167,7 +195,7 @@ case ${ENVIRONMENT} in
 
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        ${DOCKER_CMD} build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
@@ -241,14 +269,14 @@ case ${ENVIRONMENT} in
 
         # Docker 이미지 빌드
         echo "Building Docker image..."
-        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
+        ${DOCKER_CMD} build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_DIR}
         echo -e "${GREEN}✓${NC} Image built successfully"
         echo ""
 
         # 이미지를 tar로 저장
         echo "Saving image to tar file..."
         IMAGE_TAR="/tmp/${IMAGE_NAME}-${IMAGE_TAG}.tar"
-        docker save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_TAR}
+        ${DOCKER_CMD} save ${IMAGE_NAME}:${IMAGE_TAG} -o ${IMAGE_TAR}
         echo -e "${GREEN}✓${NC} Image saved to ${IMAGE_TAR}"
         echo ""
 

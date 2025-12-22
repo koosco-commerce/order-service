@@ -13,7 +13,7 @@ value class Money(val amount: Long) {
 
     fun isZero(): Boolean = amount == 0L
 
-    fun isPositive(): Boolean = amount > 0L
+    private fun isPositive(): Boolean = amount > 0L
 
     operator fun plus(other: Money): Money = Money(this.amount + other.amount)
 

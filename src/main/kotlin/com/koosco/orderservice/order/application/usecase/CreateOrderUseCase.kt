@@ -2,32 +2,45 @@ package com.koosco.orderservice.order.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.orderservice.order.application.command.CreateOrderCommand
-import com.koosco.orderservice.order.application.port.outbound.DomainEventPublishPort
-import com.koosco.orderservice.order.application.port.outbound.OrderRepositoryPort
+import com.koosco.orderservice.order.application.contract.OrderPlacedEvent
+import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
+import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.application.result.CreateOrderResult
 import com.koosco.orderservice.order.domain.Order
 import com.koosco.orderservice.order.domain.vo.OrderAmount
 import com.koosco.orderservice.order.domain.vo.OrderItemSpec
 import org.springframework.transaction.annotation.Transactional
 
+/**
+ * 주문 생성 flow
+ *
+ * trigger = api call
+ *
+ * 1) payment service 결제 초기화
+ * - No Feedback
+ *
+ * 2) inventory service 재고 예약
+ * - success = MarkOrderPaymentPendingUseCase
+ * - fail = retry & dlq
+ */
 @UseCase
 class CreateOrderUseCase(
-    private val orderRepository: OrderRepositoryPort,
-    private val domainEventPublishPort: DomainEventPublishPort,
+    private val orderRepository: OrderRepository,
+    private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 
     @Transactional
     fun execute(command: CreateOrderCommand): CreateOrderResult {
-        // item spec 생성
+        // 구매 상품 정보 생성
         val itemSpecs = command.items.map {
             OrderItemSpec(
-                productId = it.productId,
+                skuId = it.skuId,
                 quantity = it.quantity,
                 unitPrice = it.unitPrice,
             )
         }
 
-        // OrderAmount 계산
+        // 주문 금액 계산
         val orderAmount = OrderAmount.from(
             itemSpecs = itemSpecs,
             discount = command.discountAmount,
@@ -41,9 +54,12 @@ class CreateOrderUseCase(
         )
 
         val savedOrder = orderRepository.save(order)
-        savedOrder.place()
 
-        domainEventPublishPort.publishAll(savedOrder.pullDomainEvents())
+        savedOrder.place()
+        val domainEvents = savedOrder.pullDomainEvents()
+
+        // 외부 이벤트 발행
+        integrationEventPublisher.publish(OrderPlacedEvent.from(savedOrder))
 
         return CreateOrderResult(
             orderId = savedOrder.id!!,

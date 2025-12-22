@@ -27,6 +27,9 @@ enum class OrderStatus {
     /** 전체 환불 */
     REFUNDED,
 
+    /** 결제 취소 */
+    CANCELLED,
+
     /** 실패 */
     FAILED,
 }

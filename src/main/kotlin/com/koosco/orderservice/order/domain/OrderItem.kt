@@ -29,7 +29,7 @@ class OrderItem(
     val order: Order,
 
     @Column(nullable = false)
-    val productId: Long,
+    val skuId: String,
 
     @Column(nullable = false)
     val quantity: Int,
@@ -63,7 +63,7 @@ class OrderItem(
     companion object {
         fun create(order: Order, spec: OrderItemSpec, amount: OrderAmount): OrderItem = OrderItem(
             order = order,
-            productId = spec.productId,
+            skuId = spec.skuId,
             quantity = spec.quantity,
             unitPrice = spec.unitPrice,
             totalPrice = spec.totalPrice(),

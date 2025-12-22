@@ -73,7 +73,7 @@ data class OrderDetailResult(
 
 data class OrderItemDetailResult(
     val itemId: Long,
-    val productId: Long,
+    val skuId: String,
     val quantity: Int,
     val unitPrice: Long,
     val totalPrice: Long,
@@ -84,7 +84,7 @@ data class OrderItemDetailResult(
     companion object {
         fun from(item: OrderItem): OrderItemDetailResult = OrderItemDetailResult(
             itemId = item.id!!,
-            productId = item.productId,
+            skuId = item.skuId,
             quantity = item.quantity,
             unitPrice = item.unitPrice.amount,
             totalPrice = item.totalPrice.amount,

@@ -1,10 +1,15 @@
 package com.koosco.orderservice.order.domain
 
 import com.koosco.common.core.event.DomainEvent
+import com.koosco.orderservice.order.domain.event.OrderCancelReason
+import com.koosco.orderservice.order.domain.event.OrderCancelledEvent
 import com.koosco.orderservice.order.domain.event.OrderItemInfo
 import com.koosco.orderservice.order.domain.event.OrderItemsRefundedEvent
 import com.koosco.orderservice.order.domain.event.OrderPaidEvent
+import com.koosco.orderservice.order.domain.event.OrderPlaced
 import com.koosco.orderservice.order.domain.event.RefundedItemInfo
+import com.koosco.orderservice.order.domain.exception.InvalidOrderStatus
+import com.koosco.orderservice.order.domain.exception.PaymentMisMatch
 import com.koosco.orderservice.order.domain.vo.Money
 import com.koosco.orderservice.order.domain.vo.OrderAmount
 import com.koosco.orderservice.order.domain.vo.OrderItemSpec
@@ -19,7 +24,6 @@ import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.Transient
-import org.springframework.data.jpa.domain.AbstractPersistable_.id
 import java.time.LocalDateTime
 
 @Entity
@@ -93,21 +97,64 @@ class Order(
 
     fun pullDomainEvents(): List<DomainEvent> = domainEvents.toList().also { domainEvents.clear() }
 
+    /**
+     * ==== ORDER FLOW ====
+     */
     fun place() {
-        require(status == OrderStatus.INIT) { "주문은 INIT 상태에서만 생성 가능합니다." }
+        if (status != OrderStatus.INIT) {
+            throw InvalidOrderStatus()
+        }
+
+        val orderId = requireNotNull(id) {
+            "Order must be persisted before placing"
+        }
 
         status = OrderStatus.CREATED
         updatedAt = LocalDateTime.now()
+
+        domainEvents.add(
+            OrderPlaced(
+                orderId = orderId,
+                userId = userId,
+                totalAmount = totalAmount.amount,
+                payableAmount = payableAmount.amount,
+                items = items.map {
+                    OrderItemInfo(
+                        skuId = it.skuId,
+                        quantity = it.quantity,
+                        unitPrice = it.unitPrice.amount,
+                    )
+                },
+            ),
+        )
     }
 
     fun markReserved() {
-        require(status == OrderStatus.CREATED) { "재고 예약은 CREATED 상태에서만 가능합니다." }
+        if (status != OrderStatus.CREATED) {
+            throw InvalidOrderStatus()
+        }
+
         status = OrderStatus.RESERVED
         updatedAt = LocalDateTime.now()
     }
 
-    fun markPaid() {
-        require(status == OrderStatus.PAYMENT_PENDING) { "결제 완료는 PAYMENT_PENDING 상태에서만 가능합니다." }
+    fun markPaymentPending() {
+        if (status != OrderStatus.RESERVED) {
+            throw InvalidOrderStatus()
+        }
+        status = OrderStatus.PAYMENT_PENDING
+    }
+
+    fun markPaid(paidAmount: Money) {
+        if (status != OrderStatus.PAYMENT_PENDING) {
+            // 결제 대기 상태에서만 상태 변경 가능
+            throw InvalidOrderStatus()
+        }
+
+        if (paidAmount != payableAmount) {
+            throw PaymentMisMatch()
+        }
+
         status = OrderStatus.PAID
         updatedAt = LocalDateTime.now()
 
@@ -117,7 +164,7 @@ class Order(
                 paidAmount = payableAmount.amount,
                 items = items.map {
                     OrderItemInfo(
-                        productId = it.productId,
+                        skuId = it.skuId,
                         quantity = it.quantity,
                         unitPrice = it.unitPrice.amount,
                     )
@@ -126,10 +173,36 @@ class Order(
         )
     }
 
-    fun markConfirmed() {
-        require(status == OrderStatus.PAID) { "재고 확정은 PAID 상태에서만 가능합니다." }
+    fun confirmStock() {
+        if (status != OrderStatus.PAID) {
+            throw InvalidOrderStatus("재고 확정은 결제 완료 상태에서만 가능합니다. 현재 상태: $status")
+        }
+
         status = OrderStatus.CONFIRMED
         updatedAt = LocalDateTime.now()
+    }
+
+    fun cancel(reason: OrderCancelReason) {
+        if (status != OrderStatus.PAYMENT_PENDING) {
+            throw InvalidOrderStatus()
+        }
+
+        status = OrderStatus.CANCELLED
+        updatedAt = LocalDateTime.now()
+
+        domainEvents.add(
+            OrderCancelledEvent(
+                orderId = id!!,
+                reason = reason,
+                items = items.map {
+                    OrderItemInfo(
+                        skuId = it.skuId,
+                        quantity = it.quantity,
+                        unitPrice = it.unitPrice.amount,
+                    )
+                },
+            ),
+        )
     }
 
     /**
@@ -149,8 +222,8 @@ class Order(
     }
 
     fun refundItem(itemId: Long): Money {
-        if (!canRefund()) {
-            throw IllegalArgumentException("환불 가능한 상태가 아닙니다. 현재 상태: $status")
+        if (status == OrderStatus.PAID || status == OrderStatus.CONFIRMED || status == OrderStatus.PARTIALLY_REFUNDED) {
+            throw InvalidOrderStatus("환불 가능한 상태가 아닙니다. 현재 상태: $status")
         }
 
         val item = items.first { it.id == itemId }
@@ -159,7 +232,7 @@ class Order(
         refundedAmount = refundedAmount + refundAmount
         updatedAt = LocalDateTime.now()
 
-        status = if (isFullyRefunded()) {
+        status = if (items.all { it.status == OrderItemStatus.REFUNDED }) {
             OrderStatus.REFUNDED
         } else {
             OrderStatus.PARTIALLY_REFUNDED
@@ -171,7 +244,7 @@ class Order(
                 refundedAmount = refundAmount.amount,
                 refundedItems = listOf(
                     RefundedItemInfo(
-                        productId = item.productId,
+                        skuId = item.skuId,
                         quantity = item.quantity,
                         refundAmount = refundAmount.amount,
                     ),
@@ -181,8 +254,4 @@ class Order(
 
         return refundAmount
     }
-
-    private fun canRefund(): Boolean = status == OrderStatus.CONFIRMED || status == OrderStatus.PARTIALLY_REFUNDED
-
-    private fun isFullyRefunded(): Boolean = items.all { it.status == OrderItemStatus.REFUNDED }
 }

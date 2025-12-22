@@ -2,15 +2,15 @@ package com.koosco.orderservice.order.application.usecase
 
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.orderservice.order.application.command.RefundOrderItemsCommand
-import com.koosco.orderservice.order.application.port.outbound.DomainEventPublishPort
-import com.koosco.orderservice.order.application.port.outbound.OrderRepositoryPort
+import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
+import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.application.result.RefundResult
 import org.springframework.transaction.annotation.Transactional
 
 @UseCase
 class RefundOrderItemsUseCase(
-    private val orderRepository: OrderRepositoryPort,
-    private val domainEventPublishPort: DomainEventPublishPort,
+    private val orderRepository: OrderRepository,
+    private val integrationEventPublisher: IntegrationEventPublisher,
 ) {
 
     @Transactional
@@ -24,7 +24,8 @@ class RefundOrderItemsUseCase(
 
         // 도메인 이벤트 발행
         val savedOrder = orderRepository.save(order)
-        domainEventPublishPort.publishAll(order.pullDomainEvents())
+
+        // TODO : 환불 flow 진행
 
         return RefundResult(
             orderId = savedOrder.id!!,

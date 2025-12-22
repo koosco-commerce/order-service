@@ -1,20 +1,33 @@
 package com.koosco.orderservice.order.application.command
 
+import com.koosco.orderservice.order.domain.event.OrderCancelReason
 import com.koosco.orderservice.order.domain.vo.Money
 
+/**
+ * 주문 생성 command
+ */
 data class CreateOrderCommand(
     val userId: Long,
     val items: List<OrderItemCommand>,
     val discountAmount: Money = Money(0L),
-)
+) {
+    data class OrderItemCommand(val skuId: String, val quantity: Int, val unitPrice: Money)
+}
 
-data class OrderItemCommand(val productId: Long, val quantity: Int, val unitPrice: Money)
-
-data class ProcessPaymentCallbackCommand(
-    val orderId: Long,
-    val paymentId: String,
-    val status: String,
-    val paidAmount: Long,
-)
-
+/**
+ * 주문 환불 command
+ */
 data class RefundOrderItemsCommand(val orderId: Long, val refundItemIds: List<Long>)
+
+/**
+ * 주문 확정 command
+ */
+data class MarkOrderPaidCommand(val orderId: Long, val paidAmount: Long)
+
+/**
+ * 주문 취소 command
+ */
+data class CancelOrderCommand(
+    val orderId: Long,
+    val reason: OrderCancelReason, // PAYMENT_FAILED, USER_CANCELLED, ...
+)
