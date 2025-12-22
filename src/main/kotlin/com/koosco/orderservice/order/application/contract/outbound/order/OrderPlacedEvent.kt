@@ -1,5 +1,6 @@
-package com.koosco.orderservice.order.application.contract
+package com.koosco.orderservice.order.application.contract.outbound.order
 
+import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
 import com.koosco.orderservice.order.domain.Order
 import com.koosco.orderservice.order.domain.event.OrderPlaced
 import java.util.UUID

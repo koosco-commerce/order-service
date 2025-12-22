@@ -8,7 +8,7 @@ import com.koosco.common.core.event.CloudEvent
  * date           : 2025. 12. 22. 오전 4:46
  * description    :
  */
-sealed interface OrderIntegrationEvent {
+interface OrderIntegrationEvent {
 
     val orderId: Long
 

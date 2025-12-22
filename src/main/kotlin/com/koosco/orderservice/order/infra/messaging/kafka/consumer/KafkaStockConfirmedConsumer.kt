@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.MarkOrderConfirmedCommand
-import com.koosco.orderservice.order.application.contract.StockConfirmedEvent
+import com.koosco.orderservice.order.application.contract.inbound.inventory.StockConfirmedEvent
 import com.koosco.orderservice.order.application.usecase.MarkOrderConfirmedUseCase
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener

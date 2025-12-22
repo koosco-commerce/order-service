@@ -5,7 +5,7 @@ import com.koosco.common.core.exception.NotFoundException
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.common.error.OrderErrorCode
 import com.koosco.orderservice.order.application.command.MarkOrderPaidCommand
-import com.koosco.orderservice.order.application.contract.InventoryConfirmRequestedEvent
+import com.koosco.orderservice.order.application.contract.outbound.inventory.StockConfirmRequestedEvent
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
 import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.domain.vo.Money
@@ -43,7 +43,7 @@ class MarkOrderPaidUseCase(
         val domainEvents = order.pullDomainEvents()
 
         integrationEventPublisher.publish(
-            InventoryConfirmRequestedEvent.from(
+            StockConfirmRequestedEvent.from(
                 order = order,
                 domainEvents = domainEvents,
                 context = context,

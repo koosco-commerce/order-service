@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.CancelOrderCommand
-import com.koosco.orderservice.order.application.contract.PaymentCancelledEvent
+import com.koosco.orderservice.order.application.contract.inbound.payment.PaymentCancelledEvent
 import com.koosco.orderservice.order.application.usecase.CancelOrderByPaymentFailureUseCase
 import com.koosco.orderservice.order.domain.event.OrderCancelReason
 import org.slf4j.LoggerFactory

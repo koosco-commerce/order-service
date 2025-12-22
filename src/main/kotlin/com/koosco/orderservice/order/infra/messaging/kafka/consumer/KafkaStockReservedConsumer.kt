@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.MarkOrderPaymentPendingCommand
-import com.koosco.orderservice.order.application.contract.StockReservedEvent
+import com.koosco.orderservice.order.application.contract.inbound.inventory.StockReservedEvent
 import com.koosco.orderservice.order.application.usecase.MarkOrderPaymentPendingUseCase
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener

@@ -5,7 +5,7 @@ import com.koosco.common.core.exception.NotFoundException
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.common.error.OrderErrorCode
 import com.koosco.orderservice.order.application.command.CancelOrderCommand
-import com.koosco.orderservice.order.application.contract.InventoryReleaseRequestedEvent
+import com.koosco.orderservice.order.application.contract.outbound.inventory.StockReleaseRequestedEvent
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
 import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.domain.OrderStatus
@@ -43,7 +43,7 @@ class CancelOrderByUserUseCase(
 
         orderRepository.save(order)
 
-        integrationEventPublisher.publish(InventoryReleaseRequestedEvent.from(order, context))
+        integrationEventPublisher.publish(StockReleaseRequestedEvent.from(order, context))
 
         logger.info("주문 결제 실패: ${command.orderId}")
     }

@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.MarkOrderPaidCommand
-import com.koosco.orderservice.order.application.contract.PaymentCompletedEvent
+import com.koosco.orderservice.order.application.contract.inbound.payment.PaymentCompletedEvent
 import com.koosco.orderservice.order.application.usecase.MarkOrderPaidUseCase
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
