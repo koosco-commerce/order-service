@@ -5,7 +5,7 @@ import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.CancelOrderCommand
 import com.koosco.orderservice.order.application.contract.inbound.payment.PaymentCancelledEvent
 import com.koosco.orderservice.order.application.usecase.CancelOrderByPaymentFailureUseCase
-import com.koosco.orderservice.order.domain.event.OrderCancelReason
+import com.koosco.orderservice.order.domain.enums.OrderCancelReason
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.kafka.support.Acknowledgment

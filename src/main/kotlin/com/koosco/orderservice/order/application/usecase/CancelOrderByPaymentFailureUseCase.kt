@@ -5,11 +5,11 @@ import com.koosco.common.core.exception.NotFoundException
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.common.error.OrderErrorCode
 import com.koosco.orderservice.order.application.command.CancelOrderCommand
-import com.koosco.orderservice.order.application.contract.outbound.inventory.StockReleaseRequestedEvent
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
 import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.domain.OrderStatus
 import com.koosco.orderservice.order.domain.event.OrderCancelReason
+import com.koosco.orderservice.order.domain.event.OrderCancelled
 import org.slf4j.LoggerFactory
 import org.springframework.transaction.annotation.Transactional
 
@@ -51,7 +51,23 @@ class CancelOrderByPaymentFailureUseCase(
 
         orderRepository.save(order)
 
-        integrationEventPublisher.publish(StockReleaseRequestedEvent.from(order, context))
+        val cancelled = order.pullDomainEvents().filterIsInstance<OrderCancelled>().singleOrNull()
+            ?: throw IllegalStateException("OrderCancelledEvent not created")
+
+        integrationEventPublisher.publish(
+            OrderCancelled(
+                orderId = cancelled.orderId,
+                reason = cancelled.reason,
+                items = cancelled.items.map {
+                    OrderCancelled.Item(
+                        it.skuId,
+                        it.quantity,
+                    )
+                },
+                correlationId = context.correlationId,
+                causationId = context.causationId,
+            ),
+        )
 
         logger.info("주문 결제 실패로 취소 처리 완료: orderId={}", command.orderId)
     }

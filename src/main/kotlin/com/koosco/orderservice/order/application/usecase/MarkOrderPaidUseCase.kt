@@ -5,9 +5,10 @@ import com.koosco.common.core.exception.NotFoundException
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.common.error.OrderErrorCode
 import com.koosco.orderservice.order.application.command.MarkOrderPaidCommand
-import com.koosco.orderservice.order.application.contract.outbound.inventory.StockConfirmRequestedEvent
+import com.koosco.orderservice.order.application.contract.outbound.order.OrderConfirmedEvent
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
 import com.koosco.orderservice.order.application.port.OrderRepository
+import com.koosco.orderservice.order.domain.event.OrderPaid
 import com.koosco.orderservice.order.domain.vo.Money
 import org.springframework.transaction.annotation.Transactional
 
@@ -40,13 +41,16 @@ class MarkOrderPaidUseCase(
         order.markPaid(Money(command.paidAmount))
 
         orderRepository.save(order)
-        val domainEvents = order.pullDomainEvents()
+
+        val paid = order.pullDomainEvents().filterIsInstance<OrderPaid>().singleOrNull()
+            ?: throw IllegalStateException("No OrderPaidEvent in this UoW")
 
         integrationEventPublisher.publish(
-            StockConfirmRequestedEvent.from(
-                order = order,
-                domainEvents = domainEvents,
-                context = context,
+            OrderConfirmedEvent(
+                orderId = paid.orderId,
+                items = paid.items.map { OrderConfirmedEvent.Item(it.skuId, it.quantity) },
+                correlationId = context.correlationId,
+                causationId = context.causationId,
             ),
         )
     }

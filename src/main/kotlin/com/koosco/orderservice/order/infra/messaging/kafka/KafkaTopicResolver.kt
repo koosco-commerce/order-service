@@ -1,9 +1,7 @@
 package com.koosco.orderservice.order.infra.messaging.kafka
 
-import com.koosco.common.core.event.DomainEvent
-import com.koosco.inventoryservice.infra.messaging.DomainTopicResolver
 import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
-import com.koosco.orderservice.order.infra.messaging.IntegrationTopicResolver
+import com.koosco.orderservice.order.infra.messaging.TopicResolver
 import org.springframework.stereotype.Component
 
 /**
@@ -13,13 +11,7 @@ import org.springframework.stereotype.Component
  * description    :
  */
 @Component
-class OrderDomainTopicResolver(private val topicProperties: KafkaTopicProperties) : DomainTopicResolver {
-    override fun resolve(event: DomainEvent): String = topicProperties.mappings[event.getEventType()]
-        ?: topicProperties.default
-}
-
-@Component
-class OrderIntegrationTopicResolver(private val props: KafkaIntegrationProperties) : IntegrationTopicResolver {
+class KafkaTopicResolver(private val props: KafkaProperties) : TopicResolver {
 
     override fun resolve(event: OrderIntegrationEvent): String = props.mappings[event.getEventType()]
         ?: props.default

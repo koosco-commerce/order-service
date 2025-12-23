@@ -10,24 +10,8 @@ import org.springframework.stereotype.Component
  * description    :
  */
 @Component
-@ConfigurationProperties(prefix = "order.topic.domain")
+@ConfigurationProperties(prefix = "order.topic")
 class KafkaTopicProperties {
-
-    /**
-     * key   = DomainEvent.getEventType()
-     * value = Kafka topic name
-     */
-    lateinit var mappings: Map<String, String>
-
-    /**
-     * fallback topic
-     */
-    lateinit var default: String
-}
-
-@Component
-@ConfigurationProperties(prefix = "order.topic.integration")
-class KafkaIntegrationProperties {
 
     lateinit var mappings: Map<String, String>
 

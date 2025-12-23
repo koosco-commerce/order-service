@@ -3,7 +3,7 @@ package com.koosco.orderservice.order.infra.messaging.kafka.producer
 import com.koosco.common.core.event.CloudEvent
 import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
-import com.koosco.orderservice.order.infra.messaging.kafka.OrderIntegrationTopicResolver
+import com.koosco.orderservice.order.infra.messaging.kafka.KafkaTopicResolver
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.kafka.core.KafkaTemplate
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class KafkaIntegrationEventPublisher(
-    private val topicResolver: OrderIntegrationTopicResolver,
+    private val topicResolver: KafkaTopicResolver,
     private val kafkaTemplate: KafkaTemplate<String, CloudEvent<*>>,
 
     @Value("\${spring.application.name}")

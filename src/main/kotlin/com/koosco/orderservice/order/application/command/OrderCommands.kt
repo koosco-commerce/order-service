@@ -1,6 +1,6 @@
 package com.koosco.orderservice.order.application.command
 
-import com.koosco.orderservice.order.domain.event.OrderCancelReason
+import com.koosco.orderservice.order.domain.enums.OrderCancelReason
 import com.koosco.orderservice.order.domain.vo.Money
 
 /**

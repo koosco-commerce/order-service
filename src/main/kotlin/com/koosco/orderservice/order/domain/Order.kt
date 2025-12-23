@@ -1,11 +1,10 @@
 package com.koosco.orderservice.order.domain
 
 import com.koosco.common.core.event.DomainEvent
-import com.koosco.orderservice.order.domain.event.OrderCancelReason
-import com.koosco.orderservice.order.domain.event.OrderCancelledEvent
+import com.koosco.orderservice.order.domain.event.OrderCancelled
 import com.koosco.orderservice.order.domain.event.OrderItemInfo
-import com.koosco.orderservice.order.domain.event.OrderItemsRefundedEvent
-import com.koosco.orderservice.order.domain.event.OrderPaidEvent
+import com.koosco.orderservice.order.domain.event.OrderItemsRefunded
+import com.koosco.orderservice.order.domain.event.OrderPaid
 import com.koosco.orderservice.order.domain.event.OrderPlaced
 import com.koosco.orderservice.order.domain.event.RefundedItemInfo
 import com.koosco.orderservice.order.domain.exception.InvalidOrderStatus
@@ -159,7 +158,7 @@ class Order(
         updatedAt = LocalDateTime.now()
 
         domainEvents.add(
-            OrderPaidEvent(
+            OrderPaid(
                 orderId = id!!,
                 paidAmount = payableAmount.amount,
                 items = items.map {
@@ -191,7 +190,7 @@ class Order(
         updatedAt = LocalDateTime.now()
 
         domainEvents.add(
-            OrderCancelledEvent(
+            OrderCancelled(
                 orderId = id!!,
                 reason = reason,
                 items = items.map {
@@ -239,7 +238,7 @@ class Order(
         }
 
         domainEvents.add(
-            OrderItemsRefundedEvent(
+            OrderItemsRefunded(
                 orderId = id!!,
                 refundedAmount = refundAmount.amount,
                 refundedItems = listOf(

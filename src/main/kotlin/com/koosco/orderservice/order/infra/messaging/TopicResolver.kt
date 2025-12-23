@@ -8,6 +8,6 @@ import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
  * date           : 2025. 12. 19. 오후 3:00
  * description    :
  */
-interface IntegrationTopicResolver {
+interface TopicResolver {
     fun resolve(event: OrderIntegrationEvent): String
 }
