@@ -3,13 +3,16 @@ package com.koosco.orderservice.order.application.usecase
 import com.koosco.common.core.annotation.UseCase
 import com.koosco.orderservice.order.application.command.CreateOrderCommand
 import com.koosco.orderservice.order.application.contract.outbound.order.OrderPlacedEvent
+import com.koosco.orderservice.order.application.contract.outbound.order.OrderPlacedEvent.PlacedItem
 import com.koosco.orderservice.order.application.port.IntegrationEventPublisher
 import com.koosco.orderservice.order.application.port.OrderRepository
 import com.koosco.orderservice.order.application.result.CreateOrderResult
 import com.koosco.orderservice.order.domain.Order
+import com.koosco.orderservice.order.domain.event.OrderPlaced
 import com.koosco.orderservice.order.domain.vo.OrderAmount
 import com.koosco.orderservice.order.domain.vo.OrderItemSpec
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 /**
  * 주문 생성 flow
@@ -56,10 +59,30 @@ class CreateOrderUseCase(
         val savedOrder = orderRepository.save(order)
 
         savedOrder.place()
-        val domainEvents = savedOrder.pullDomainEvents()
+
+        val placedEvent = order.pullDomainEvents()
+            .filterIsInstance<OrderPlaced>()
+            .singleOrNull()
+            ?: throw IllegalStateException()
 
         // 외부 이벤트 발행
-        integrationEventPublisher.publish(OrderPlacedEvent.from(savedOrder))
+        integrationEventPublisher.publish(
+            OrderPlacedEvent(
+                orderId = placedEvent.orderId,
+                userId = placedEvent.userId,
+                payableAmount = order.payableAmount.amount,
+                items = placedEvent.items.map {
+                    PlacedItem(
+                        skuId = it.skuId,
+                        quantity = it.quantity,
+                        unitPrice = it.unitPrice,
+                    )
+                },
+
+                correlationId = placedEvent.orderId.toString(),
+                causationId = UUID.randomUUID().toString(),
+            ),
+        )
 
         return CreateOrderResult(
             orderId = savedOrder.id!!,

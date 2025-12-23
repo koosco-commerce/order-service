@@ -1,9 +1,6 @@
 package com.koosco.orderservice.order.application.contract.outbound.order
 
 import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
-import com.koosco.orderservice.order.domain.Order
-import com.koosco.orderservice.order.domain.event.OrderPlaced
-import java.util.UUID
 
 /**
  * fileName       : OrderContract
@@ -31,32 +28,4 @@ data class OrderPlacedEvent(
     data class PlacedItem(val skuId: String, val quantity: Int, val unitPrice: Long)
 
     override fun getEventType(): String = "order.placed"
-
-    companion object {
-
-        fun from(order: Order): OrderPlacedEvent {
-            val placedEvent = (
-                order.pullDomainEvents()
-                    .filterIsInstance<OrderPlaced>()
-                    .singleOrNull()
-                    ?: throw IllegalStateException()
-                )
-
-            return OrderPlacedEvent(
-                orderId = placedEvent.orderId,
-                userId = placedEvent.userId,
-                payableAmount = order.payableAmount.amount,
-                items = placedEvent.items.map {
-                    PlacedItem(
-                        skuId = it.skuId,
-                        quantity = it.quantity,
-                        unitPrice = it.unitPrice,
-                    )
-                },
-
-                correlationId = placedEvent.orderId.toString(),
-                causationId = UUID.randomUUID().toString(),
-            )
-        }
-    }
 }
