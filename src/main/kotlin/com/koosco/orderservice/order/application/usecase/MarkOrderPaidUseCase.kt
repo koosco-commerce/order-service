@@ -48,7 +48,7 @@ class MarkOrderPaidUseCase(
         integrationEventPublisher.publish(
             OrderConfirmedEvent(
                 orderId = paid.orderId,
-                items = paid.items.map { OrderConfirmedEvent.Item(it.skuId, it.quantity) },
+                items = paid.items.map { OrderConfirmedEvent.ConfirmedItem(it.skuId, it.quantity) },
                 correlationId = context.correlationId,
                 causationId = context.causationId,
             ),

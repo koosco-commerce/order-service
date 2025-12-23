@@ -12,15 +12,15 @@ package com.koosco.orderservice.order.application.command
 data class MarkOrderPaymentPendingCommand(
     val orderId: Long,
     val reservationId: String,
-    val items: List<Item> = emptyList(),
+    val items: List<MarkedPaymentPendingItem> = emptyList(),
 ) {
-    data class Item(val skuId: String, val quantity: Int)
+    data class MarkedPaymentPendingItem(val skuId: String, val quantity: Int)
 }
 
 data class MarkOrderConfirmedCommand(
     val orderId: Long,
     val reservationId: String? = null,
-    val items: List<Item> = emptyList(),
+    val items: List<MarkedConfirmedItem> = emptyList(),
 ) {
-    data class Item(val skuId: String, val quantity: Int)
+    data class MarkedConfirmedItem(val skuId: String, val quantity: Int)
 }

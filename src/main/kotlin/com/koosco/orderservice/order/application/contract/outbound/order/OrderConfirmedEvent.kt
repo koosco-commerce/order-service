@@ -10,11 +10,11 @@ import com.koosco.orderservice.order.application.contract.OrderIntegrationEvent
  */
 class OrderConfirmedEvent(
     override val orderId: Long,
-    val items: List<Item>,
+    val items: List<ConfirmedItem>,
     val correlationId: String,
     val causationId: String?,
 ) : OrderIntegrationEvent {
-    data class Item(val skuId: String, val quantity: Int)
+    data class ConfirmedItem(val skuId: String, val quantity: Int)
 
     override fun getEventType(): String = "order.confirmed"
 }

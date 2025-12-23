@@ -41,7 +41,7 @@ class KafkaStockConfirmedConsumer(private val markOrderConfirmedUseCase: MarkOrd
             MarkOrderConfirmedCommand(
                 orderId = data.orderId,
                 reservationId = data.reservationId,
-                items = data.items.map { MarkOrderConfirmedCommand.Item(it.skuId, it.quantity) },
+                items = data.items.map { MarkOrderConfirmedCommand.MarkedConfirmedItem(it.skuId, it.quantity) },
             ),
         )
     }

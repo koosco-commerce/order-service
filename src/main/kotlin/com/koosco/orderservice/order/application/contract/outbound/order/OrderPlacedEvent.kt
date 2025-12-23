@@ -23,12 +23,12 @@ data class OrderPlacedEvent(
     override val orderId: Long,
     val userId: Long,
     val payableAmount: Long,
-    val items: List<Item>,
+    val items: List<PlacedItem>,
 
     val correlationId: String,
     val causationId: String? = null,
 ) : OrderIntegrationEvent {
-    data class Item(val skuId: String, val quantity: Int, val unitPrice: Long)
+    data class PlacedItem(val skuId: String, val quantity: Int, val unitPrice: Long)
 
     override fun getEventType(): String = "order.placed"
 
@@ -47,7 +47,7 @@ data class OrderPlacedEvent(
                 userId = placedEvent.userId,
                 payableAmount = order.payableAmount.amount,
                 items = placedEvent.items.map {
-                    Item(
+                    PlacedItem(
                         skuId = it.skuId,
                         quantity = it.quantity,
                         unitPrice = it.unitPrice,

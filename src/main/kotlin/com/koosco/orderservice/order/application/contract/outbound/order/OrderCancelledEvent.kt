@@ -12,11 +12,11 @@ import com.koosco.orderservice.order.domain.enums.OrderCancelReason
 data class OrderCancelledEvent(
     override val orderId: Long,
     val reason: OrderCancelReason,
-    val items: List<Item>,
+    val items: List<CancelledItem>,
     val correlationId: String,
     val causationId: String? = null,
 ) : OrderIntegrationEvent {
-    data class Item(val skuId: String, val quantity: Int)
+    data class CancelledItem(val skuId: String, val quantity: Int)
 
     override fun getEventType(): String = "order.cancelled"
     override fun getPartitionKey(): String = orderId.toString()

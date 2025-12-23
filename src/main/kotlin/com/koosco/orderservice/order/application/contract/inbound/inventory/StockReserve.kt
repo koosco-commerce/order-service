@@ -10,12 +10,12 @@ package com.koosco.orderservice.order.application.contract.inbound.inventory
 data class StockReservedEvent(
     val orderId: Long,
     val reservationId: String,
-    val items: List<Item>,
+    val items: List<ReservedItem>,
 
     val correlationId: String,
     val causationId: String?,
 ) {
-    data class Item(val skuId: String, val quantity: Int)
+    data class ReservedItem(val skuId: String, val quantity: Int)
 }
 
 // 재고 예약 실패
@@ -23,8 +23,8 @@ data class StockReserveFailedEvent(
     val orderId: Long,
     val reservationId: String? = null,
     val reason: String, // e.g. NOT_ENOUGH_STOCK
-    val failedItems: List<Item>? = null,
+    val failedItems: List<ReserveFailedItem>? = null,
     val occurredAt: Long,
 ) {
-    data class Item(val skuId: String, val quantity: Int, val availableQuantity: Int? = null)
+    data class ReserveFailedItem(val skuId: String, val quantity: Int, val availableQuantity: Int? = null)
 }

@@ -10,12 +10,12 @@ package com.koosco.orderservice.order.application.contract.inbound.inventory
 data class StockConfirmedEvent(
     val orderId: Long,
     val reservationId: String,
-    val items: List<Item>,
+    val items: List<ConfirmedItem>,
 
     val correlationId: String,
     val causationId: String?,
 ) {
-    data class Item(val skuId: String, val quantity: Int)
+    data class ConfirmedItem(val skuId: String, val quantity: Int)
 }
 
 // 재고 확정 실패

@@ -51,7 +51,7 @@ class CancelOrderByUserUseCase(
             OrderCancelledEvent(
                 orderId = cancelled.orderId,
                 reason = cancelled.reason,
-                items = cancelled.items.map { OrderCancelledEvent.Item(it.skuId, it.quantity) },
+                items = cancelled.items.map { OrderCancelledEvent.CancelledItem(it.skuId, it.quantity) },
                 correlationId = context.correlationId,
                 causationId = context.causationId,
             ),
