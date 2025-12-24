@@ -56,6 +56,10 @@ order:
     default: koosco.commerce.integration.order
     mappings:
       "order.failed": koosco.commerce.order.failed
+      order:
+        placed: koosco.commerce.order.placed
+        confirmed: koosco.commerce.order.confirmed
+        cancelled: koosco.commerce.order.cancelled
       stock:
         reserved: koosco.commerce.stock.reserved
         confirmed: koosco.commerce.stock.confirmed
@@ -63,16 +67,6 @@ order:
       payment:
         completed: koosco.commerce.payment.completed
         failed: koosco.commerce.payment.failed
-
-
-
-kafka:
-  topics:
-    order-created: koosco.commerce.order.created
-    inventory-reserve-requested: inventory.reserve.requested
-    inventory-confirm-requested: inventory.confirm.requested
-    refund-requested: refund.requested
-    payment-completed: payment.completed
 
 springdoc:
   swagger-ui:
