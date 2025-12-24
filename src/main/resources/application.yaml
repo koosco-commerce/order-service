@@ -53,7 +53,7 @@ jwt:
 
 order:
   topic:
-    default: koosco.commerce.integration.order
+    default: koosco.commerce.order.default
     mappings:
       "order.failed": koosco.commerce.order.failed
       order:
@@ -65,6 +65,7 @@ order:
         confirmed: koosco.commerce.stock.confirmed
         canceled: koosco.commerce.stock.canceled
       payment:
+        created: koosco.commerce.payment.created
         completed: koosco.commerce.payment.completed
         failed: koosco.commerce.payment.failed
 

@@ -1,6 +1,7 @@
 package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.MarkOrderPaidCommand
 import com.koosco.orderservice.order.application.contract.inbound.payment.PaymentCompletedEvent
@@ -19,27 +20,35 @@ import org.springframework.validation.annotation.Validated
 @Validated
 class KafkaPaymentCompletedConsumer(private val markOrderPaidUseCase: MarkOrderPaidUseCase) {
 
-    private val logger = LoggerFactory.getLogger(KafkaPaymentCompletedConsumer::class.java)
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     @KafkaListener(
         topics = ["\${order.topic.mappings.payment.failed}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
-    fun onPaymentCompleted(@Valid event: CloudEvent<PaymentCompletedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onPaymentCompleted(@Valid event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("PaymentCompleted is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val paymentCompleted = try {
+            objectMapper.convertValue(payload, PaymentCompletedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize PaymentCompletedEvent: eventId=${event.id}", e)
+            ack.acknowledge() // poison message → skip
+            return
+        }
+
         logger.info(
             "Received PaymentCompleted: eventId=${event.id}, " +
-                "orderId=${data.orderId}, paymentId=...",
+                "orderId=${paymentCompleted.orderId}, paymentId=...",
         )
 
         val context = MessageContext(
-            correlationId = data.correlationId,
+            correlationId = paymentCompleted.correlationId,
             causationId = event.id,
         )
 
@@ -47,8 +56,8 @@ class KafkaPaymentCompletedConsumer(private val markOrderPaidUseCase: MarkOrderP
             // 주문 확정
             markOrderPaidUseCase.execute(
                 MarkOrderPaidCommand(
-                    orderId = data.orderId,
-                    paidAmount = data.paidAmount,
+                    orderId = paymentCompleted.orderId,
+                    paidAmount = paymentCompleted.paidAmount,
                 ),
                 context,
             )
@@ -56,11 +65,11 @@ class KafkaPaymentCompletedConsumer(private val markOrderPaidUseCase: MarkOrderP
             ack.acknowledge()
 
             logger.info(
-                "Successfully confirm order for Order: eventId=${event.id}, orderId=${data.orderId}...",
+                "Successfully confirm order for Order: eventId=${event.id}, orderId=${paymentCompleted.orderId}...",
             )
         } catch (e: Exception) {
             logger.error(
-                "Failed to process Payment Completed event: ${event.id}, orderId=${data.orderId}",
+                "Failed to process Payment Completed event: ${event.id}, orderId=${paymentCompleted.orderId}",
                 e,
             )
         }

@@ -1,7 +1,7 @@
 package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.orderservice.common.MessageContext
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.orderservice.order.application.command.MarkOrderConfirmedCommand
 import com.koosco.orderservice.order.application.contract.inbound.inventory.StockConfirmedEvent
 import com.koosco.orderservice.order.application.usecase.MarkOrderConfirmedUseCase
@@ -24,24 +24,29 @@ class KafkaStockConfirmedConsumer(private val markOrderConfirmedUseCase: MarkOrd
         topics = ["\${order.topic.mappings.stock.confirmed}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
-    fun onStockConfirmed(event: CloudEvent<StockConfirmedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onStockConfirmed(event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("StockConfirmedEvent is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
-        val context = MessageContext(
-            correlationId = data.correlationId,
-            causationId = event.id,
-        )
+        val stockConfirmedEvent = try {
+            objectMapper.convertValue(payload, StockConfirmedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize StockConfirmedEvent: eventId=${event.id}", e)
+            ack.acknowledge()
+            return
+        }
 
         markOrderConfirmedUseCase.execute(
             MarkOrderConfirmedCommand(
-                orderId = data.orderId,
-                reservationId = data.reservationId,
-                items = data.items.map { MarkOrderConfirmedCommand.MarkedConfirmedItem(it.skuId, it.quantity) },
+                orderId = stockConfirmedEvent.orderId,
+                reservationId = stockConfirmedEvent.reservationId,
+                items = stockConfirmedEvent.items.map {
+                    MarkOrderConfirmedCommand.MarkedConfirmedItem(it.skuId, it.quantity)
+                },
             ),
         )
     }

@@ -1,7 +1,7 @@
 package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
-import com.koosco.orderservice.common.MessageContext
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.orderservice.order.application.command.MarkOrderPaymentPendingCommand
 import com.koosco.orderservice.order.application.contract.inbound.inventory.StockReservedEvent
 import com.koosco.orderservice.order.application.usecase.MarkOrderPaymentPendingUseCase
@@ -24,23 +24,26 @@ class KafkaStockReservedConsumer(private val markOrderPaymentPendingUseCase: Mar
         topics = ["\${order.topic.mappings.stock.reserved}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
-    fun onStockReserved(event: CloudEvent<StockReservedEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onStockReserved(event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("StockReservedEvent is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
-        val context = MessageContext(
-            correlationId = data.correlationId,
-            causationId = event.id,
-        )
+        val stockReserved = try {
+            objectMapper.convertValue(payload, StockReservedEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize StockReservedEvent: eventId=${event.id}", e)
+            ack.acknowledge()
+            return
+        }
 
         markOrderPaymentPendingUseCase.execute(
             MarkOrderPaymentPendingCommand(
-                orderId = data.orderId,
-                reservationId = data.reservationId,
+                orderId = stockReserved.orderId,
+                reservationId = stockReserved.reservationId,
             ),
         )
 

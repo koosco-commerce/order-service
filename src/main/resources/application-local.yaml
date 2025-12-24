@@ -1,6 +1,2 @@
 server:
   port: 8085
-
-kafka:
-  topics:
-    order-created: koosco.commerce.local.order.created

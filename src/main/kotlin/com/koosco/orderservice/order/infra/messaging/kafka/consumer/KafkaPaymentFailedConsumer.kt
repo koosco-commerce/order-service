@@ -1,6 +1,7 @@
 package com.koosco.orderservice.order.infra.messaging.kafka.consumer
 
 import com.koosco.common.core.event.CloudEvent
+import com.koosco.common.core.util.JsonUtils.objectMapper
 import com.koosco.orderservice.common.MessageContext
 import com.koosco.orderservice.order.application.command.CancelOrderCommand
 import com.koosco.orderservice.order.application.contract.inbound.payment.PaymentCancelledEvent
@@ -26,28 +27,36 @@ class KafkaPaymentFailedConsumer(private val cancelOrderByPaymentFailureUseCase:
         topics = ["\${order.topic.mappings.payment.completed}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
-    fun onPaymentFailed(event: CloudEvent<PaymentCancelledEvent>, ack: Acknowledgment) {
-        val data = event.data
+    fun onPaymentFailed(event: CloudEvent<*>, ack: Acknowledgment) {
+        val payload = event.data
             ?: run {
                 logger.error("PaymentCancelledEvent is null: eventId=${event.id}")
                 ack.acknowledge()
                 return
             }
 
+        val paymentCompleted = try {
+            objectMapper.convertValue(payload, PaymentCancelledEvent::class.java)
+        } catch (e: Exception) {
+            logger.error("Failed to deserialize PaymentCancelledEvent: eventId=${event.id}", e)
+            ack.acknowledge()
+            return
+        }
+
         logger.info(
             "Received PaymentCancelledEvent: eventId=${event.id}, " +
-                "orderId=${data.orderId}, paymentId=...",
+                "orderId=${paymentCompleted.orderId}, paymentId=...",
         )
 
         val context = MessageContext(
-            correlationId = data.correlationId,
+            correlationId = paymentCompleted.correlationId,
             causationId = event.id,
         )
 
         cancelOrderByPaymentFailureUseCase.execute(
             CancelOrderCommand(
-                orderId = data.orderId,
-                reason = OrderCancelReason.valueOf(data.reason),
+                orderId = paymentCompleted.orderId,
+                reason = OrderCancelReason.valueOf(paymentCompleted.reason),
             ),
             context,
         )

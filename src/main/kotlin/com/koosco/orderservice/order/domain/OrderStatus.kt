@@ -12,6 +12,9 @@ enum class OrderStatus {
     /** 재고 예약 완료 */
     RESERVED,
 
+    /** 결제 초기화 완료 */
+    PAYMENT_CREATED,
+
     /** 결제 대기 중 */
     PAYMENT_PENDING,
 

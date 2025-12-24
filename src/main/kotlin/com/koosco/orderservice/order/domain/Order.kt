@@ -1,12 +1,11 @@
 package com.koosco.orderservice.order.domain
 
 import com.koosco.common.core.event.DomainEvent
+import com.koosco.orderservice.order.domain.enums.OrderCancelReason
 import com.koosco.orderservice.order.domain.event.OrderCancelled
-import com.koosco.orderservice.order.domain.event.OrderItemInfo
 import com.koosco.orderservice.order.domain.event.OrderItemsRefunded
 import com.koosco.orderservice.order.domain.event.OrderPaid
 import com.koosco.orderservice.order.domain.event.OrderPlaced
-import com.koosco.orderservice.order.domain.event.RefundedItemInfo
 import com.koosco.orderservice.order.domain.exception.InvalidOrderStatus
 import com.koosco.orderservice.order.domain.exception.PaymentMisMatch
 import com.koosco.orderservice.order.domain.vo.Money
@@ -118,7 +117,7 @@ class Order(
                 totalAmount = totalAmount.amount,
                 payableAmount = payableAmount.amount,
                 items = items.map {
-                    OrderItemInfo(
+                    Item(
                         skuId = it.skuId,
                         quantity = it.quantity,
                         unitPrice = it.unitPrice.amount,
@@ -129,11 +128,20 @@ class Order(
     }
 
     fun markReserved() {
-        if (status != OrderStatus.CREATED) {
+        if (status != OrderStatus.CREATED || status != OrderStatus.PAYMENT_CREATED) {
             throw InvalidOrderStatus()
         }
 
         status = OrderStatus.RESERVED
+        updatedAt = LocalDateTime.now()
+    }
+
+    fun markPaymentCreated() {
+        if (status != OrderStatus.RESERVED || status != OrderStatus.CREATED) {
+            throw InvalidOrderStatus()
+        }
+
+        status = OrderStatus.PAYMENT_CREATED
         updatedAt = LocalDateTime.now()
     }
 
@@ -162,7 +170,7 @@ class Order(
                 orderId = id!!,
                 paidAmount = payableAmount.amount,
                 items = items.map {
-                    OrderItemInfo(
+                    Item(
                         skuId = it.skuId,
                         quantity = it.quantity,
                         unitPrice = it.unitPrice.amount,
@@ -194,7 +202,7 @@ class Order(
                 orderId = id!!,
                 reason = reason,
                 items = items.map {
-                    OrderItemInfo(
+                    Item(
                         skuId = it.skuId,
                         quantity = it.quantity,
                         unitPrice = it.unitPrice.amount,
@@ -242,10 +250,10 @@ class Order(
                 orderId = id!!,
                 refundedAmount = refundAmount.amount,
                 refundedItems = listOf(
-                    RefundedItemInfo(
+                    Item(
                         skuId = item.skuId,
                         quantity = item.quantity,
-                        refundAmount = refundAmount.amount,
+                        unitPrice = refundAmount.amount,
                     ),
                 ),
             ),

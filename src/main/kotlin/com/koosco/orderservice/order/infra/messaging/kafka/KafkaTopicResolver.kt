@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
  * description    :
  */
 @Component
-class KafkaTopicResolver(private val props: KafkaProperties) : TopicResolver {
+class KafkaTopicResolver(private val props: KafkaTopicProperties) : TopicResolver {
 
     override fun resolve(event: OrderIntegrationEvent): String = props.mappings[event.getEventType()]
         ?: props.default
