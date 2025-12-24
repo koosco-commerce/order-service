@@ -21,7 +21,7 @@ class KafkaStockReservedConsumer(private val markOrderPaymentPendingUseCase: Mar
     private val logger = LoggerFactory.getLogger(KafkaPaymentCompletedConsumer::class.java)
 
     @KafkaListener(
-        topics = ["\${order.topic.integration.mappings.stock.reserved}"],
+        topics = ["\${order.topic.mappings.stock.reserved}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
     fun onStockReserved(event: CloudEvent<StockReservedEvent>, ack: Acknowledgment) {

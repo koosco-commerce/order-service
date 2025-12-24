@@ -23,6 +23,7 @@ data class StockConfirmFailedEvent(
     val orderId: Long,
     val reservationId: String? = null,
     val reason: String, // e.g. RESERVATION_NOT_FOUND, NOT_ENOUGH_STOCK, INTERNAL_ERROR
+
     val correlationId: String,
     val causationId: String? = null,
 )

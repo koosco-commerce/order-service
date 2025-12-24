@@ -22,7 +22,7 @@ class KafkaPaymentCompletedConsumer(private val markOrderPaidUseCase: MarkOrderP
     private val logger = LoggerFactory.getLogger(KafkaPaymentCompletedConsumer::class.java)
 
     @KafkaListener(
-        topics = ["\${order.topic.integration.mappings.payment.completed}"],
+        topics = ["\${order.topic.mappings.payment.failed}"],
         groupId = "\${spring.kafka.consumer.group-id:order-service-group}",
     )
     fun onPaymentCompleted(@Valid event: CloudEvent<PaymentCompletedEvent>, ack: Acknowledgment) {

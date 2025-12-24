@@ -53,23 +53,16 @@ jwt:
 
 order:
   topic:
-    domain:
-      default: order-domain-events
-      mappings:
-        OrderPlaced: koosco.commerce.order.placed
-        OrderConfirmed: koosco.commerce.order.confirmed
-        OrderCanceled: koosco.commerce.order.canceled
-
-    integration:
-      default: koosco.commerce.integration.order
-      mappings:
-        "order.failed": koosco.commerce.order.failed
-        stock:
-          reserved: koosco.commerce.stock.reserved
-          confirmed: koosco.commerce.stock.confirmed
-          canceled: koosco.commerce.stock.canceled
-        payment:
-          completed: koosco.commerce.payment.completed
+    default: koosco.commerce.integration.order
+    mappings:
+      "order.failed": koosco.commerce.order.failed
+      stock:
+        reserved: koosco.commerce.stock.reserved
+        confirmed: koosco.commerce.stock.confirmed
+        canceled: koosco.commerce.stock.canceled
+      payment:
+        completed: koosco.commerce.payment.completed
+        failed: koosco.commerce.payment.failed
 
 
 
